@@ -1,0 +1,16 @@
+- hosts: nodes
+  tasks:
+    - name: Apache | Remove a index.html
+      file:
+         path: /var/www/html/index.html
+         state: absent
+    - name: FireWall | Disabled 80 port
+      firewalld:
+        service: http
+        permanent: yes
+        state: disabled
+    - name: Apache | Ensure Apache is absent
+      yum:
+         name: httpd
+         state: absent
+    
