@@ -9,3 +9,8 @@
         name: httpd
         state: started
         enabled: yes
+    - name: FireWall | Permit traffic for Apache service
+      firewalld:
+        service: http
+        permanent: yes
+        state: enabled
