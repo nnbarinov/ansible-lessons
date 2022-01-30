@@ -1,38 +1,37 @@
 - hosts: nodes
+  vars:
+   fpath: /etc/default/grub
+   param1: net.ifnames
+   value1: 0
+   param2: biosdevname
+   value2: 0
+
   tasks:
     - name: Add a parameter net.ifnames in GRUB config file
       lineinfile:
         state: present
-        path: /etc/default/grub
-        regexp: '^(GRUB_CMDLINE_LINUX=(?!.* net.ifnames)\"[^\"]+)(\".*)'
-        line: '\1 net.ifnames=0\2'
+        path: "{{ fpath }}"
+        regexp: '^(GRUB_CMDLINE_LINUX=(?!.* {{ param1 | regex_escape }})\"[^\"]+)(\".*)'
+        line: '\1 {{ param1 }}={{ value1 }}\2'
         backrefs: yes
     - name: Replase parameter's value net.ifnames if it's not correct
       replace:
-        path: /etc/default/grub
-        regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ option | regex_escape }}=).)*)(?:[" ]{{ option | regex_escape }}=\S+)?(.*")$'
-        replace: '\1 {{ option }}={{ value }}\2'
-      vars:
-        option: net.ifnames
-        value: 0
+        path: "{{ fpath }}"
+        regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ param1 | regex_escape }}=).)*)(?:[" ]{{ param1 | regex_escape }}=\S+)?(.*")$'
+        replace: '\1 {{ param1 }}={{ value1 }}\2'
 
     - name: Add a parameter biosdevname in GRUB config file
       lineinfile:
         state: present
-        path: /etc/default/grub
-        regexp: '^(GRUB_CMDLINE_LINUX=(?!.* biosdevname)\"[^\"]+)(\".*)'
-        line: '\1 biosdevname=0\2'
+        path: "{{ fpath }}"
+        regexp: '^(GRUB_CMDLINE_LINUX=(?!.* {{ param2 | regex_escape }})\"[^\"]+)(\".*)'
+        line: '\1 {{ param2 }}={{ value2 }}\2'
         backrefs: yes
     - name: Replase parameter's value biosdevname if it's not correct
       replace:
-        path: /etc/default/grub
-        regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ option | regex_escape }}=).)*)(?:[" ]{{ option | regex_escape }}=\S+)?(.*")$'
-        replace: '\1 {{ option }}={{ value }}\2'
-      vars:
-        option: biosdevname
-        value: 0
+        path: "{{ fpath }}"
+        regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ param2 | regex_escape }}=).)*)(?:[" ]{{ param2 | regex_escape }}=\S+)?(.*")$'
+        replace: '\1 {{ param2 }}={{ value2 }}\2'
 
-
-    - name: Load config to GRUB 
+    - name: Load config to GRUB
       command: grub2-mkconfig -o /boot/grub2/grub.cfg
-   
