@@ -1,0 +1,17 @@
+---
+- name: create users
+  hosts: nodes     
+  vars_files:
+    - upasswd.yml
+
+  tasks:
+    - name: creating user
+      user:
+        name: "{{ item.key }}"
+        comment: "{{ item.key }}@example.com"
+        create_home: True
+        home: "/home/{{ item.key }}"
+        password: "{{ item.value  | password_hash('sha512') }}"
+        update_password: on_create
+      loop: "{{ users | dict2items }}"
+
