@@ -1,0 +1,4 @@
+---
+# default place for index file
+index_file: "{{ role_path }}/files/index.html"
+

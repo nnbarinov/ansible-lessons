@@ -1,0 +1,43 @@
+---
+# tasks file for ansible-role-apache
+  - name: Apache -> Ensure Apache has installed
+    yum:
+       name: httpd
+       state: present
+       update_cache: True
+
+  - name: Apache -> Ensure service httpd has started and enabled on boot
+    service:
+      name: httpd
+      state: started
+      enabled: True
+  
+  - name: Apache -> Copy html index file
+    copy:
+       src: "{{ index_file }}"
+       dest: /var/www/html/index.html
+       owner: root
+       group: root
+       mode: '0644'
+    notify: reload httpd
+
+  - name: FireWall -> Collect facts about service FireWall
+    service_facts:
+    register: services_state
+
+  - name: FireWall -> firewalld service state
+    debug:
+      var: services_state.ansible_facts.services['firewalld.service'].state
+
+  - name: FireWall -> firewalld service status
+    debug:
+      var: services_state.ansible_facts.services['firewalld.service'].status 
+
+  - name: FireWall -> Permit traffic for Apache service
+    firewalld:
+      service: http
+      state: enabled
+      permanent: yes
+    when: (services_state.ansible_facts.services['firewalld.service'].state == "running") or
+          (services_state.ansible_facts.services['firewalld.service'].status == "enabled") 
+    notify: reload firewall

@@ -1,0 +1,64 @@
+---
+# tasks file for ansible-role-vsftpd
+  - name: Ftp -> Ensure vsftpd has installed
+    yum:
+       name: vsftpd
+       state: present
+       update_cache: True
+
+  - name: Ftp -> made pub folder
+    file:
+      path: /var/ftp/pub
+      state: directory
+      mode: 0555
+      owner: ftp
+      group: ftp
+      setype: public_content_rw_t
+
+  - name: Ftp -> made upload folder
+    file:
+      path: /var/ftp/pub/upload
+      state: directory
+      owner: ftp
+      group: ftp
+      mode: 0766
+      setype: public_content_rw_t
+
+  - name: SELinux -> Enable anonymus write
+    shell: 'setsebool -P ftpd_anon_write=on'
+
+  - name: Ftp -> Copy config file vsftpd
+    template:
+      src: vsftpd.conf.j2
+      dest: /etc/vsftpd/vsftpd.conf
+      owner: root
+      group: root
+      mode: 0644
+    notify: restart vsftpd
+
+  - name: Ftp -> Ensure service vsftpd has started and enabled on boot
+    service:
+      name: vsftpd
+      state: started
+      enabled: True
+
+  - name: FireWall -> Collect facts about service FireWall
+    service_facts:
+    register: services_state
+
+  - name: FireWall -> firewalld service state
+    debug:
+      var: services_state.ansible_facts.services['firewalld.service'].state
+
+  - name: FireWall -> firewalld service status
+    debug:
+      var: services_state.ansible_facts.services['firewalld.service'].status 
+
+  - name: FireWall -> Permit traffic for Apache service
+    firewalld:
+      service: ftp
+      state: enabled
+      permanent: yes
+    when: (services_state.ansible_facts.services['firewalld.service'].state == "running") or
+          (services_state.ansible_facts.services['firewalld.service'].status == "enabled") 
+    notify: reload firewall

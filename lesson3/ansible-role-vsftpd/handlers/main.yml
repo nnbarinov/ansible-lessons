@@ -1,0 +1,14 @@
+---
+# handlers file for ansible-role-apache
+
+- name: restart vsftpd
+  service:
+    name: vsftpd
+    state: restarted
+
+
+- name: reload firewall
+  service:
+    name: firewalld
+    state: reloaded
+
